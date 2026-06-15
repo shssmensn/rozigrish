@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomize Bot App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #a8e063, #56ab2f);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 85%;
+            max-width: 340px;
+        }
+        .dice {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .animate-dice {
+            animation: spin 0.6s ease-in-out infinite;
+        }
+        h2 {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #2b7a1d;
+        }
+        p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .btn-gift {
+            background: #9b51e0;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(155, 81, 224, 0.3);
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div id="dice" class="dice">🎲</div>
+        <h2 id="status-title">Проверка подписки...</h2>
+        <p id="status-desc">Сверяем данные каналов с сервером мессенджера</p>
+        <button id="gift-btn" class="btn-gift" onclick="claimGift()">Забрать подарок!</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const diceEl = document.getElementById('dice');
+        const titleEl = document.getElementById('status-title');
+        const descEl = document.getElementById('status-desc');
+        const giftBtn = document.getElementById('gift-btn');
+
+        // Получаем ID розыгрыша из ссылки (?id=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const giveawayId = urlParams.get('id') || '1';
+
+        // Данные пользователя из Telegram
+        const initData = tg.initData; 
+        const user = tg.initDataUnsafe?.user;
+
+        // ВНИМАНИЕ: Замени на URL своего запущенного бэкэнда на Render/Replit/VPS после деплоя
+        const BACKEND_URL = "https://твой-бэкэнд-сервер.com"; 
+
+        // Запуск анимации кубика
+        diceEl.classList.add('animate-dice');
+
+        // Отправляем запрос на бэкэнд для проверки подписки и регистрации
+        fetch(`${BACKEND_URL}/api/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                init_data: initData,
+                giveaway_id: giveawayId,
+                user_id: user?.id,
+                username: user?.username || '',
+                first_name: user?.first_name || ''
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            diceEl.classList.remove('animate-dice');
+            
+            if (data.status === 'success') {
+                diceEl.innerHTML = "🎯";
+                titleEl.innerHTML = "🟢 Вы уже участвуете в этом розыгрыше!"; // Точь-в-точь как на скрине
+                descEl.innerHTML = "Условия полностью выполнены.";
+                giftBtn.style.display = "block"; // Показываем кнопку бонуса
+            } else if (data.status === 'already') {
+                diceEl.innerHTML = "🎯";
+                titleEl.innerHTML = "🟢 Вы уже участвуете в этом розыгрыше!";
+                descEl.innerHTML = "Повторная регистрация не требуется.";
+                giftBtn.style.display = "block";
+            } else {
+                diceEl.innerHTML = "❌";
+                titleEl.innerHTML = "Ошибка подписки!";
+                titleEl.style.color = "#d9534f";
+                descEl.innerHTML = data.message || "Подпишитесь на все каналы спонсоров.";
+            }
+        })
+        .catch(err => {
+            diceEl.classList.remove('animate-dice');
+            diceEl.innerHTML = "⚠️";
+            titleEl.innerHTML = "Ошибка сети";
+            descEl.innerHTML = "Не удалось связаться с сервером обработки данных.";
+        });
+
+        function claimGift() {
+            tg.showAlert("🎁 Подарок станет доступен сразу после завершения и подведения итогов розыгрыша!");
+        }
+    </script>
+</body>
+</html>
