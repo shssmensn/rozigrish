@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #84c474; /* Тот самый зеленый фон */
+            background: #84c474; /* Насыщенный зеленый фон как на скринах */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -54,7 +54,7 @@
             width: 90%;
             max-width: 340px;
             text-align: center;
-            display: none; /* Появится только после анимации */
+            display: none; /* Появляется только после завершения кручения кубика */
         }
         .gift-text {
             color: white;
@@ -95,30 +95,32 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Раскрываем окно полностью
+        tg.expand(); // Открываем приложение сразу на весь экран смартфона
 
         const diceEl = document.getElementById('dice');
         const titleEl = document.getElementById('status-title');
         const giftBox = document.getElementById('gift-box');
 
-        // Запускаем красивую анимацию вращения кубика
+        // Включаем анимацию вращения кубика
         diceEl.classList.add('animate-dice');
 
-        // Ровно через 2 секунды останавливаем и показываем успешный статус
+        // Ровно через 2 секунды останавливаем кубик и выводим статус
         setTimeout(() => {
             diceEl.classList.remove('animate-dice');
             
-            // Точный текст с твоего образца!
+            // Текст и галочка в точности как на твоем оригинале
             titleEl.innerHTML = `<span class="checkmark">✔</span> Вы уже участвуете в этом розыгрыше!`;
             
-            // Показываем нижнюю фиолетовую плашку с кнопкой
+            // Плавно показываем кнопку подарка
             giftBox.style.display = 'block';
         }, 2000);
 
         function sendDataToBot() {
-            // Передаем команду боту напрямую через Telegram API
-            tg.sendData("user_confirmed_participation");
-            // Закрываем Mini App окно
+            // ВНИМАНИЕ: Замени HelperChatBot_bot на юзернейм ТВОЕГО бота (без знака @)
+            const botUsername = "HelperChatBot_bot"; 
+            
+            // Закрываем окно приложения и перенаправляем пользователя в чат с командой регистрации
+            tg.openTelegramLink(`https://t.me/${botUsername}?start=join`);
             tg.close();
         }
     </script>
